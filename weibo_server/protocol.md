@@ -34,5 +34,5 @@ TCP协议能保证数据从发送缓冲区到接收缓冲区是有序无误的�
 
 
 **实现:**
-- [procotol.h](procotol.h)
-- [procotol.c](procotol.c)
+- [protocol.h](protocol.h)
+- [protocol.c](protocol.c)
