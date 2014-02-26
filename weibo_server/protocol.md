@@ -31,3 +31,8 @@ TCP协议能保证数据从发送缓冲区到接收缓冲区是有序无误的�
 - Data Length指的是数据的长度
 - Data 数据体
 - CS 校验，包括Type、Data Length和Data的校验，一般可以用md5校验 
+
+
+**实现:**
+- [procotol.h](procotol.h)
+- [procotol.c](procotol.c)
