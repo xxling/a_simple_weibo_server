@@ -1,11 +1,11 @@
 #include "protocol.h"
 
-void message_read(int socket_fd, void *message)
+message_t  *message_read(int socket_fd)
 {
     int recv_len = 0;
     int data_length = 0;
     int len;
-    message_t *m = (message_t *)message;
+    message_t *m = (message_t *)malloc(sizeof(message_t));
 
     while(recv_len < HEAD_SIZE)
     {
@@ -38,6 +38,8 @@ void message_read(int socket_fd, void *message)
         }
     }
 
+    return m;
+
 }
 
 void message_write(int socket_fd, void *message)
@@ -57,7 +59,7 @@ void message_write(int socket_fd, void *message)
     }
 
     send_len = 0;
-    data_length = m->length;
+    data_length = get_length(m);
     while(send_len < data_length)
     {
         len = send(socket_fd, m->data, data_length - send_len, 0);
@@ -79,25 +81,43 @@ void message_write(int socket_fd, void *message)
     
 }
 
-void message_set(void *message, uint8_t type, uint32_t length, void *data)
+message_t *message_new(uint8_t type, uint32_t length, uint32_t uid, void *data)
 {
-    message_t *m = (message_t *)message;
-    m->type = type;
-    m->length = length;
+    message_t *m = (message_t *)malloc(sizeof(message_t));
+    memset(m, 0, sizeof(message_t));
+    (m->head).type = type;
+    (m->head).length = length;
+    (m->head).uid = uid;
 
-    m->data = (char *)malloc(sizeof(length) * sizeof(char));
+    m->data = (char *)malloc(length * sizeof(char));
+    memset(m->data, 0, length * sizeof(char));
     memcpy(m->data, data, length);
+    return m;
 }
 
-void check_type(void *message)
+void message_free(void *message)
 {
     message_t *m = (message_t *)message;
-    
+    free(m->data);
+    free(m);
+}
+
+uint8_t message_type(void *message)
+{
+    message_t *m = (message_t *)message;
+    return (m->head).type;
 }
 
 uint32_t get_length(void *message)
 {
     message_t *m = (message_t *)message;
 
-    return (uint32_t)m->length;
+    return (m->head).length;
+}
+
+uint32_t get_uid(void *message)
+{
+    message_t *m = (message_t *)message;
+    
+    return (m->head).uid;
 }

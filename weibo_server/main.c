@@ -3,12 +3,8 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-
-#include "protocol.h"
-
-#define PORT 5900
-#define BACKLOG 5
+#include "weibo.h"
+#include "init.h"
 
 int main(int argc, char *argv[])
 {
@@ -20,8 +16,9 @@ int main(int argc, char *argv[])
     message_t out;
     int len;
     int ret;
-    char buf[255] = "send to client";
-
+    pthread_t tids[THREAD_NUMS];
+    pthread_attr_t attr;
+    int i;
     socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     if(socket_fd < 0)
     {
@@ -49,19 +46,14 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    while(1)
+    init_queues(THREAD_NUMS);
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    for(i = 0; i < THREAD_NUMS; i++)
     {
-
-        client_fd = accept(socket_fd, (struct sockaddr *)&client, &len);
-        if(client_fd < 0)
-        {
-            printf("accept failed\n");
-            close(socket_fd);
-            return -1;
-        }
-
-        message_read(client_fd, (void *)&message);
-        message_set(&out, 1, strlen(buf) + 1, buf);
-        message_write(client_fd, &out);
+        pthread_create(&tids[i], &attr, (void *)listen_message_in, (void *)&socket_fd);
     }
+    pthread_attr_destroy(&attr);
+    
+    listen_message_in((void *)&socket_fd);
 }
