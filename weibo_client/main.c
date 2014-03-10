@@ -1,4 +1,6 @@
 #include "protocol.h"
+#include "login.h"
+#include "weibo.h"
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -9,11 +11,10 @@
 
 extern int errno;
 
-#define SERVER_IP "115.29.172.129"
+#define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 5900
 #define THREADS 10
 
-void chat_with_server(void *);
 
 int main(int argc, char *argv[])
 {
@@ -37,7 +38,14 @@ int main(int argc, char *argv[])
     server.sin_port = htons(SERVER_PORT);
     server.sin_addr.s_addr = inet_addr(SERVER_IP);
 
-    for(i = 0; i < THREADS; i++)
+    ret = connect(socket_fd, (struct sockaddr *)&server, sizeof(struct sockaddr));
+    if(ret < 0)
+    {
+        printf("connect error: %d\n", errno);
+        return;
+    }
+
+    /*for(i = 0; i < THREADS; i++)
     {
         pthread_create(&tids[i], NULL, (void *)chat_with_server, (void *)&server);
     }
@@ -45,7 +53,9 @@ int main(int argc, char *argv[])
     for(i = 0; i < THREADS; i++)
     {
         pthread_join(tids[i], NULL);
-    }
+    }*/
+
+    process_login(socket_fd, "Charles1", "123456");
 
     return 0;
     
@@ -67,10 +77,6 @@ void chat_with_server(void *server)
         printf("connect error: %d\n", errno);
         return;
     }
-
-    message_set(&out, 1, strlen(buf) + 1, buf);
-    message_write(socket_fd, (void *)&out);
-    message_read(socket_fd, (void *)&in);
 
     printf("get message from server: %s\n", in.data);
     pthread_exit((void *)0);
